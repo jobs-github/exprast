@@ -23,7 +23,7 @@ func newExprAST(tt tokenType, key string, left *ExprAST, right *ExprAST) *ExprAS
 	}
 }
 
-type AST struct {
+type exprAST struct {
 	leaf      func(tt tokenType) bool
 	preced    tokPrecedence
 	tokens    []*token
@@ -33,12 +33,12 @@ type AST struct {
 	err       error
 }
 
-func (this *AST) parseExpression() *ExprAST {
+func (this *exprAST) parseExpression() *ExprAST {
 	left := this.parsePrimary()
 	return this.parseBinOpRHS(0, left)
 }
 
-func (this *AST) mismatch() {
+func (this *exprAST) mismatch() {
 	this.err = errors.New(fmt.Sprintf("want ')' but get %v\n%v",
 		this.currTok.tok, errPos(this.source, this.currTok.offset)))
 }
@@ -47,7 +47,7 @@ func isOperator(tt tokenType) bool {
 	return tokenOperator == tt
 }
 
-func (this *AST) parsePrimary() *ExprAST {
+func (this *exprAST) parsePrimary() *ExprAST {
 	if this.leaf(this.currTok.tt) {
 		return this.parseLeaf(this.currTok.tt)
 	}
@@ -71,7 +71,7 @@ func (this *AST) parsePrimary() *ExprAST {
 	return nil
 }
 
-func (this *AST) parseBinOpRHS(execPrec int, left *ExprAST) *ExprAST {
+func (this *exprAST) parseBinOpRHS(execPrec int, left *ExprAST) *ExprAST {
 	for {
 		tokPrec := this.getTokPrecedence()
 		if tokPrec < execPrec {
@@ -97,17 +97,17 @@ func (this *AST) parseBinOpRHS(execPrec int, left *ExprAST) *ExprAST {
 	}
 }
 
-func (this *AST) getTokPrecedence() int {
+func (this *exprAST) getTokPrecedence() int {
 	return this.preced.get(this.currTok.tok)
 }
 
-func (this *AST) parseLeaf(tt tokenType) *ExprAST {
+func (this *exprAST) parseLeaf(tt tokenType) *ExprAST {
 	node := newExprAST(tt, this.currTok.tok, nil, nil)
 	this.getNextToken()
 	return node
 }
 
-func (this *AST) getNextToken() *token {
+func (this *exprAST) getNextToken() *token {
 	this.currIndex++
 	if this.currIndex < len(this.tokens) {
 		this.currTok = this.tokens[this.currIndex]
@@ -131,7 +131,7 @@ func buildExprAST(
 		return nil, errors.New("empty token")
 	}
 	// []token -> AST Tree
-	rawAst := &AST{
+	rawAst := &exprAST{
 		leaf:      leaf,
 		preced:    preced,
 		tokens:    toks,
