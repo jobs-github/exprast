@@ -54,7 +54,26 @@ func (this *parser) throw(start int) {
 	this.err = errors.New(s)
 }
 
-func (this *parser) decodeOp(start int) *token {
+func (this *parser) eof() bool {
+	if this.offset >= len(this.source) || this.err != nil {
+		return true
+	}
+	return false
+}
+
+func (this *parser) skipWhitespace() {
+	var err error
+	for isWhitespace(this.ch) && err == nil {
+		err = this.nextCh()
+	}
+}
+
+func (this *parser) current() (byte, int) {
+	return this.ch, this.offset
+}
+
+func (this *parser) decodeOp() *token {
+	start := this.offset
 	tok := &token{
 		tok:    string(this.ch),
 		offset: start,
@@ -64,7 +83,8 @@ func (this *parser) decodeOp(start int) *token {
 	return tok
 }
 
-func (this *parser) decodeInteger(start int) *token {
+func (this *parser) decodeInteger() *token {
+	start := this.offset
 	for isDigitNum(this.ch) && this.nextCh() == nil {
 	}
 	tok := &token{
@@ -75,7 +95,8 @@ func (this *parser) decodeInteger(start int) *token {
 	return tok
 }
 
-func (this *parser) decodeLogic(start int) *token {
+func (this *parser) decodeLogic() *token {
+	start := this.offset
 	startCh := this.ch
 	if err := this.nextCh(); nil != err {
 		this.throw(start)
@@ -96,7 +117,8 @@ func (this *parser) decodeLogic(start int) *token {
 	}
 }
 
-func (this *parser) decodeVar(start int, skipSign bool) *token {
+func (this *parser) decodeVar(skipSign bool) *token {
+	start := this.offset
 	if err := this.nextCh(); nil != err {
 		this.throw(start)
 		return nil

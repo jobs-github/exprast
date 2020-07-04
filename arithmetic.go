@@ -71,15 +71,13 @@ func (this *arithmeticExprAst) Interpret(node *ExprAST, interpretVar ArithmeticV
 	}
 }
 
-func nextArithmeticToken(skipSign bool, p *parser) *token {
-	if p.offset >= len(p.source) || p.err != nil {
+func nextArithmeticToken(skipSign bool, p iparser) *token {
+	if p.eof() {
 		return nil
 	}
-	var err error
-	for isWhitespace(p.ch) && err == nil {
-		err = p.nextCh()
-	}
-	switch p.ch {
+	p.skipWhitespace()
+	ch, offset := p.current()
+	switch ch {
 	case
 		'(',
 		')',
@@ -89,7 +87,7 @@ func nextArithmeticToken(skipSign bool, p *parser) *token {
 		'/',
 		'^',
 		'%':
-		return p.decodeOp(p.offset)
+		return p.decodeOp()
 	case
 		'0',
 		'1',
@@ -101,11 +99,11 @@ func nextArithmeticToken(skipSign bool, p *parser) *token {
 		'7',
 		'8',
 		'9':
-		return p.decodeInteger(p.offset)
+		return p.decodeInteger()
 	case '$':
-		return p.decodeVar(p.offset, skipSign)
+		return p.decodeVar(skipSign)
 	default:
-		p.throw(p.offset)
+		p.throw(offset)
 		return nil
 	}
 }

@@ -58,10 +58,22 @@ func isDigitNum(c byte) bool {
 	return '0' <= c && c <= '9'
 }
 
-type nextToken func(skipSign bool, p *parser) *token
-
 type token struct {
 	tok    string
 	offset int
 	tt     tokenType
 }
+
+type iparser interface {
+	eof() bool
+	skipWhitespace()
+	throw(start int)
+	current() (byte, int)
+
+	decodeVar(skipSign bool) *token
+	decodeOp() *token
+	decodeInteger() *token
+	decodeLogic() *token
+}
+
+type nextToken func(skipSign bool, p iparser) *token

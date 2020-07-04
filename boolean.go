@@ -71,23 +71,21 @@ func (this *booleanExprAst) Interpret(node *ExprAST, interpretVar BooleanVarInte
 	}
 }
 
-func nextBooleanToken(skipSign bool, p *parser) *token {
-	if p.offset >= len(p.source) || p.err != nil {
+func nextBooleanToken(skipSign bool, p iparser) *token {
+	if p.eof() {
 		return nil
 	}
-	var err error
-	for isWhitespace(p.ch) && err == nil {
-		err = p.nextCh()
-	}
-	switch p.ch {
+	p.skipWhitespace()
+	ch, offset := p.current()
+	switch ch {
 	case '(', ')':
-		return p.decodeOp(p.offset)
+		return p.decodeOp()
 	case '&', '|':
-		return p.decodeLogic(p.offset)
+		return p.decodeLogic()
 	case '$':
-		return p.decodeVar(p.offset, skipSign)
+		return p.decodeVar(skipSign)
 	default:
-		p.throw(p.offset)
+		p.throw(offset)
 		return nil
 	}
 }
