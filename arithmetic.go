@@ -31,13 +31,13 @@ func DefaultArithmeticExprAst() IArithmeticExprAst {
 		interpretArithmetic}
 }
 
-func (this *arithmeticExprAst) Build(exp string, skipSign bool) (*ExprAST, error) {
-	if len(exp) < 1 {
-		return nil, fmt.Errorf("invalid expr: %v", exp)
+func (this *arithmeticExprAst) Build(expr string, skipSign bool) (*ExprAST, error) {
+	if len(expr) < 1 {
+		return nil, fmt.Errorf("invalid expr: %v", expr)
 	}
-	return buildExprAST(this.preced, exp, skipSign, func(tt tokenType) bool {
+	return buildExprAST(defaultParser(expr, this.next), this.preced, expr, skipSign, func(tt tokenType) bool {
 		return tokenVariable == tt || tokenInteger == tt
-	}, this.next)
+	})
 }
 
 func (this *arithmeticExprAst) Interpret(node *ExprAST, interpretVar ArithmeticVarInterpreter) (int64, error) {

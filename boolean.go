@@ -31,19 +31,19 @@ func DefaultBooleanExprAst() IBooleanExprAst {
 	}
 }
 
-func (this *booleanExprAst) Build(exp string, skipSign bool) (*ExprAST, error) {
-	if len(exp) < 2 {
-		return nil, fmt.Errorf("invalid expr: %v", exp)
+func (this *booleanExprAst) Build(expr string, skipSign bool) (*ExprAST, error) {
+	if len(expr) < 2 {
+		return nil, fmt.Errorf("invalid expr: %v", expr)
 	}
-	if exp[0] != '(' {
+	if expr[0] != '(' {
 		return nil, fmt.Errorf("expr not start with `(`")
 	}
-	if exp[len(exp)-1] != ')' {
+	if expr[len(expr)-1] != ')' {
 		return nil, fmt.Errorf("expr not end with `)`")
 	}
-	return buildExprAST(this.preced, exp, skipSign, func(tt tokenType) bool {
+	return buildExprAST(defaultParser(expr, this.next), this.preced, expr, skipSign, func(tt tokenType) bool {
 		return tokenVariable == tt
-	}, this.next)
+	})
 }
 
 func (this *booleanExprAst) Interpret(node *ExprAST, interpretVar BooleanVarInterpreter) (error, error) {

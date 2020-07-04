@@ -5,36 +5,33 @@ import (
 	"fmt"
 )
 
-func parse(s string, skipSign bool, next nextToken) ([]*token, error) {
-	p := &parser{
-		source: s,
-		err:    nil,
-		ch:     s[0],
-	}
-	toks := p.parse(skipSign, next)
-	if p.err != nil {
-		return nil, p.err
-	}
-	return toks, nil
-}
-
 type parser struct {
+	next   nextToken
 	source string
 	ch     byte
 	offset int
 	err    error
 }
 
-func (this *parser) parse(skipSign bool, next nextToken) []*token {
-	toks := make([]*token, 0)
+func defaultParser(s string, next nextToken) iparser {
+	return &parser{
+		next:   next,
+		source: s,
+		err:    nil,
+		ch:     s[0],
+	}
+}
+
+func (this *parser) parse(skipSign bool) ([]*token, error) {
+	toks := []*token{}
 	for {
-		tok := next(skipSign, this)
+		tok := this.next(skipSign, this)
 		if nil == tok {
 			break
 		}
 		toks = append(toks, tok)
 	}
-	return toks
+	return toks, this.err
 }
 
 func (this *parser) nextCh() error {

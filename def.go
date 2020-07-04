@@ -65,6 +65,7 @@ type token struct {
 }
 
 type iparser interface {
+	parse(skipSign bool) ([]*token, error)
 	eof() bool
 	skipWhitespace()
 	throw(start int)

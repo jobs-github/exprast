@@ -117,13 +117,13 @@ func (this *AST) getNextToken() *token {
 }
 
 func buildExprAST(
+	p iparser,
 	preced tokPrecedence,
-	exp string,
+	expr string,
 	skipSign bool,
 	leaf func(tt tokenType) bool,
-	next nextToken,
 ) (*ExprAST, error) {
-	toks, err := parse(exp, skipSign, next)
+	toks, err := p.parse(skipSign)
 	if nil != err {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func buildExprAST(
 		leaf:      leaf,
 		preced:    preced,
 		tokens:    toks,
-		source:    exp,
+		source:    expr,
 		currIndex: 0,
 		currTok:   toks[0],
 	}
