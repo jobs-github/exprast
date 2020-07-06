@@ -119,6 +119,11 @@ func Test_arithmeticExprAst_Interpret(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	astNumber, err := arithmeticAst.Build("1", false)
+	if nil != err {
+		t.Error(err)
+		return
+	}
 
 	type args struct {
 		node         *ExprAST
@@ -132,7 +137,8 @@ func Test_arithmeticExprAst_Interpret(t *testing.T) {
 	}{
 		{"TestInterpretExprAST_1", args{astPureExpr, nil}, 2560, false},
 		{"TestInterpretExprAST_2", args{ast, interpreterVar}, 2560, false},
-		{"TestInterpretExprAST_3", args{ast, nil}, 0, true},
+		{"TestInterpretExprAST_3", args{astNumber, nil}, 1, false},
+		{"TestInterpretExprAST_4", args{ast, nil}, 0, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
