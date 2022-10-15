@@ -14,11 +14,10 @@ type IBooleanExprAst interface {
 
 type booleanExprAst struct {
 	astContext
-	interpretOp booleanOpInterpreter
 }
 
-func NewBooleanExprAst(preced tokPrecedence, next nextToken, interpretOp booleanOpInterpreter) IBooleanExprAst {
-	return &booleanExprAst{astContext{preced, next}, interpretOp}
+func NewBooleanExprAst(preced tokPrecedence, next nextToken) IBooleanExprAst {
+	return &booleanExprAst{astContext{preced, next}}
 }
 
 func DefaultBooleanExprAst() IBooleanExprAst {
@@ -27,7 +26,6 @@ func DefaultBooleanExprAst() IBooleanExprAst {
 			tokPrecedence{"||": 20, "&&": 40},
 			nextBooleanToken,
 		},
-		interpretBoolean,
 	}
 }
 
@@ -46,21 +44,38 @@ func (this *booleanExprAst) Build(expr string, skipSign bool) (*ExprAST, error) 
 	})
 }
 
+func (this *booleanExprAst) doAnd(lhs *ExprAST, rhs *ExprAST, interpretVar BooleanVarInterpreter) (error, error) {
+	l, err := this.Interpret(lhs, interpretVar)
+	if nil != err {
+		return nil, err
+	}
+	if nil != l {
+		return l, nil
+	}
+	return this.Interpret(rhs, interpretVar)
+}
+
+func (this *booleanExprAst) doOr(lhs *ExprAST, rhs *ExprAST, interpretVar BooleanVarInterpreter) (error, error) {
+	l, err := this.Interpret(lhs, interpretVar)
+	if nil != err {
+		return nil, err
+	}
+	if nil == l {
+		return l, nil
+	}
+	return this.Interpret(rhs, interpretVar)
+}
+
 func (this *booleanExprAst) Interpret(node *ExprAST, interpretVar BooleanVarInterpreter) (error, error) {
 	switch node.Type {
 	case tokenOperator:
-		if nil == this.interpretOp {
-			return nil, fmt.Errorf("interpretOp is nil")
+		if "&&" == node.Key {
+			return this.doAnd(node.Left, node.Right, interpretVar)
+		} else if "||" == node.Key {
+			return this.doOr(node.Left, node.Right, interpretVar)
+		} else {
+			return nil, fmt.Errorf("undefined op: %v", node.Key)
 		}
-		l, err := this.Interpret(node.Left, interpretVar)
-		if nil != err {
-			return nil, err
-		}
-		r, err := this.Interpret(node.Right, interpretVar)
-		if nil != err {
-			return nil, err
-		}
-		return this.interpretOp(node.Key, l, r), nil
 	case tokenVariable:
 		if nil == interpretVar {
 			return nil, fmt.Errorf("interpretVar is nil")
@@ -87,27 +102,5 @@ func nextBooleanToken(skipSign bool, p iparser) *token {
 	default:
 		p.throw(offset)
 		return nil
-	}
-}
-
-func interpretBoolean(op string, left error, right error) error {
-	if "&&" == op {
-		if nil != left {
-			return left
-		}
-		if nil != right {
-			return right
-		}
-		return nil
-	} else if "||" == op {
-		if nil == left {
-			return nil
-		}
-		if nil == right {
-			return nil
-		}
-		return left
-	} else {
-		return fmt.Errorf("undefined op: %v", op)
 	}
 }
